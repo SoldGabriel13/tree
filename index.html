@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mandelbrot Set Visualization</title>
+    <link rel="stylesheet" type="text/css" href="style.css">
+</head>
+<body>
+    <div id="all">
+        <h1>Mandelbrot Set Visualization</h1>
+        <label  for="resolution">Resolution(N por N):</label>
+        <input type="number" id="resolution" min="100" max="2000" value="500">
+        <br>
+        <label for="iterations">Iterations:</label>
+        <input type="number" id="iterations" min="100" max="1000" value="128">
+        <br>
+        <label for="zoom">Zoom:</label>
+        <input type="number" id="zoom" min="1" max="1000" value="1">
+        <br>
+        <label for="x_coor">Cordenada X do centro:</label>
+        <input type="number" id="xc" min="-2" max="1" value="-0.743643887037151">
+        <br>
+        <label for="y_coor">Cordenada Y do centro:</label>
+        <input type="number" id="yc" min="-1" max="1" value="0.13182590420533">
+        <br>
+        <button id="white"></button>
+        <button id="red"></button>
+        <button id="orange"></button>
+        <button id="yellow"></button>
+        <button id="green"></button>
+        <button id="blue"></button>
+        <button id="dye"></button>
+        <br>
+        <button id="generate">Generate</button>
+        <br>
+    </div>
+    <div id="canvas">
+        <canvas id="mandelbrotCanvas"></canvas>
+    </div>
+    <script src="main.js"></script>
+</body>
+</html>
