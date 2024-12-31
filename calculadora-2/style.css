@@ -1,3 +1,21 @@
-h1 {
-  background-color: green;
+@font-face {
+    font-family: '7S';
+    src: url('https://soldgabriel13.github.io/tree/Seven%20Segment.ttf') format('truetype');
+}
+#visual {
+  text-align: center;
+}
+#screen-d {
+  font-size: 20pt;
+  font-family: "7S";
+  text-align: center;
+  display: flex;
+  justify-content: center; /* Centraliza horizontalmente */
+  align-items: center;
+}
+button {
+  color: white;
+  background-color: gray;
+  width: 50px;
+  heigth: 300%;
 }
