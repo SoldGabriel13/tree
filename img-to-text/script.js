@@ -1,7 +1,7 @@
 const b = document.getElementById('openFileButton');
 const input = document.getElementById('fileInput');
 const pre = document.getElementById('fileContent');
-const grad = "Ñ$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/\|()1{}[]?-_+~<>i!lI;:,^`'. ";
+const grad = "█Ñ$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/\|()1{}[]?-_+~<>i!lI;:,^`'. ";
 let t = "";
 let Resx = 1;
 let Resy = 1;
