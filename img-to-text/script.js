@@ -53,12 +53,12 @@ input.addEventListener('change', UpdateI);
 
 document.getElementById('resx').addEventListener('input', function() {
   Resx = parseInt(document.getElementById('resx').value);
-  document.getElementById('rxt').textContent = "Multiplicador da resolução x = 1/" + Resx;
+  document.getElementById('rxt').textContent = "Divisor da resolução x = " + Resx;
   UpdateI({ target: { files: input.files } });
 });
 document.getElementById('resy').addEventListener('input', function() {
   Resy = parseInt(document.getElementById('resy').value);
-  document.getElementById('ryt').textContent = "Multiplicador da resolução y = 1/" + Resy;
+  document.getElementById('ryt').textContent = "Divisor da resolução y = " + Resy;
   UpdateI({ target: { files: input.files } });
 });
 
