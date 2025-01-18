@@ -1,7 +1,7 @@
 const b = document.getElementById('openFileButton');
 const input = document.getElementById('fileInput');
 const pre = document.getElementById('fileContent');
-const grad = "Ñ@W#$98452301abc?!+=;:-,_";
+const grad = "Ñ@W#$98452301cab?!+=;:-,_";
 let t = "";
 let Resx = 1;
 let Resy = 1;
@@ -9,9 +9,9 @@ let Resy = 1;
 document.getElementById('fs').textContent = "tamanho texto(em pixels) = " + document.getElementById('fontsize').value;
 document.getElementById('fileContent').style.fontSize = String(document.getElementById('fontsize').value) + "px";
 Resy = parseInt(document.getElementById('resy').value);
-document.getElementById('ryt').textContent = "Multiplicador da resolução y = 1/" + Resy;
+document.getElementById('ryt').textContent = "Divisor da resolução y = " + Resy;
 Resx = parseInt(document.getElementById('resx').value);
-document.getElementById('rxt').textContent = "Multiplicador da resolução y = 1/" + Resx;
+document.getElementById('rxt').textContent = "Divisor da resolução x = " + Resx;
 
 function UpdateI(event) {
   let file = event.target.files[0];
