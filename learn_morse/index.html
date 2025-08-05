@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Jogo Morse</title>
+  <style>
+    body { font-family: sans-serif; text-align: center; margin-top: 50px; }
+    table { margin: 20px auto; border-collapse: collapse; }
+    th, td { border: 1px solid #999; padding: 8px 12px; }
+    #startBtn, #nextBtn { padding: 10px 20px; font-size: 16px; }
+    input[type="text"] { font-size: 18px; padding: 6px; width: 60px; text-align: center; }
+    #results { display: none; }
+  </style>
+</head>
+<body>
+  <h1>Jogo de Código Morse</h1>
+  <label for="difficulty">Dificuldade:</label>
+<select id="difficulty">
+  <option value="easy">Fácil</option>
+  <option value="normal" selected>Normal</option>
+  <option value="hard">Difícil</option>
+</select>
+
+  <input type="number" id="wpm" value="20" min="5" max="60">
+  <button id="startBtn">Começar</button>
+  
+  <div id="game" style="display:none;">
+    <h2>Letra em Morse: <span id="currentLetter">?</span></h2>
+    <input type="text" id="answer" maxlength="1" autocomplete="off">
+    <button id="nextBtn">Enviar</button>
+    <p id="timer">Tempo: 0 ms</p>
+  </div>
+
+  <div id="results">
+    <h2>Pontuação Final: <span id="finalScore"></span> (<span id="rank"></span>)</h2>
+    <table>
+      <thead>
+        <tr><th>Letra</th><th>Resposta</th><th>Tempo (ms)</th><th>Pontuação</th></tr>
+      </thead>
+      <tbody id="resultsTable"></tbody>
+    </table>
+  </div>
+
+  <script>
+  const morseCode = {
+    A: '.-',     B: '-...',   C: '-.-.',   D: '-..',
+    E: '.',      F: '..-.',   G: '--.',    H: '....',
+    I: '..',     J: '.---',   K: '-.-',    L: '.-..',
+    M: '--',     N: '-.',     O: '---',    P: '.--.',
+    Q: '--.-',   R: '.-.',    S: '...',    T: '-',
+    U: '..-',    V: '...-',   W: '.--',    X: '-..-',
+    Y: '-.--',   Z: '--..'
+  };
+
+  function shuffle(array) {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+  return array;
+}
+
+let letters = shuffle(Object.keys(morseCode));
+
+  let results = [];
+  let current = 0;
+  let startTime = 0;
+  let currentLetter = '';
+  let wpm = 20;
+  const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+  function playMorse(letter, wpm) {
+    const unit = 1.2 / wpm; // duration in seconds (not ms!)
+    const pattern = morseCode[letter];
+    let time = audioCtx.currentTime;
+
+    for (let symbol of pattern) {
+      if (symbol === '.') {
+        beep(time, unit);
+        time += unit + unit; // beep + 1 unit pause
+      } else if (symbol === '-') {
+        beep(time, unit * 3);
+        time += unit * 3 + unit; // beep + 1 unit pause
+      }
+    }
+  }
+
+function beep(startTime, durationSec) {
+  const oscillator = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+
+  oscillator.frequency.setValueAtTime(600, startTime);
+  gain.gain.setValueAtTime(1, startTime); // Começa com volume 1
+
+  // Suavemente reduz o volume no final do beep
+  gain.gain.setValueAtTime(1, startTime + durationSec - 0.01);
+  gain.gain.linearRampToValueAtTime(0, startTime + durationSec);
+
+  oscillator.connect(gain);
+  gain.connect(audioCtx.destination);
+
+  oscillator.start(startTime);
+  oscillator.stop(startTime + durationSec);
+}
+
+  function startGame() {
+    letters = shuffle(Object.keys(morseCode));
+    results = [];
+    current = 0;
+    wpm = parseInt(document.getElementById('wpm').value);
+    document.getElementById('game').style.display = 'block';
+    document.getElementById('results').style.display = 'none';
+    nextLetter();
+  }
+
+  function nextLetter() {
+    if (current >= letters.length) {
+      finishGame();
+      return;
+    }
+
+    currentLetter = letters[current];
+    document.getElementById('currentLetter').textContent = '?';
+    document.getElementById('answer').value = '';
+    document.getElementById('timer').textContent = 'Tempo: 0 ms';
+
+    playMorse(currentLetter, wpm);
+    startTime = performance.now();
+
+    setTimeout(() => {
+      document.getElementById('answer').focus();
+    }, 100);
+  }
+
+  function submitAnswer() {
+    const userInput = document.getElementById('answer').value.toUpperCase();
+    const elapsed = performance.now() - startTime;
+    const correct = userInput === currentLetter;
+
+let score = 100;
+if (!correct) {
+  score = 0;
+} else {
+  const difficulty = document.getElementById('difficulty').value;
+  let gracePeriod = 3000;
+  let penaltyRate = 100 / 7000;
+
+  if (difficulty === 'easy') {
+    gracePeriod = 5000; // 5s sem penalização
+    penaltyRate = 100 / 10000; // penaliza mais devagar
+  } else if (difficulty === 'hard') {
+    gracePeriod = 2000; // 2s sem penalização
+    penaltyRate = 100 / 5000; // penaliza mais rápido
+  }
+
+  const overtime = Math.max(0, elapsed - gracePeriod);
+  score = Math.max(0, 100 - overtime * penaltyRate);
+}
+
+
+
+    results.push({
+      letter: currentLetter,
+      answer: userInput || '-',
+      time: Math.round(elapsed),
+      score: Math.round(score)
+    });
+
+    current++;
+    nextLetter();
+  }
+
+  function finishGame() {
+    const avgScore = results.reduce((a, b) => a + b.score, 0) / results.length;
+    let rank = 'D';
+    if (avgScore >= 95) rank = 'S';
+    else if (avgScore >= 85) rank = 'A';
+    else if (avgScore >= 70) rank = 'B';
+    else if (avgScore >= 50) rank = 'C';
+
+    document.getElementById('game').style.display = 'none';
+    document.getElementById('results').style.display = 'block';
+    document.getElementById('finalScore').textContent = avgScore.toFixed(1);
+    document.getElementById('rank').textContent = rank;
+
+    const table = document.getElementById('resultsTable');
+    table.innerHTML = '';
+    for (let res of results) {
+      const row = `<tr>
+        <td>${res.letter}</td>
+        <td>${res.answer}</td>
+        <td>${res.time}</td>
+        <td>${res.score}</td>
+      </tr>`;
+      table.innerHTML += row;
+    }
+  }
+
+  document.getElementById('startBtn').addEventListener('click', startGame);
+  document.getElementById('nextBtn').addEventListener('click', submitAnswer);
+  document.getElementById('answer').addEventListener('keydown', e => {
+    if (e.key === 'Enter') submitAnswer();
+  });
+</script>
+
+</body>
+</html>
