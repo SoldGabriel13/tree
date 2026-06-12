@@ -1,11 +1,10 @@
 <html>
   <head>
-    
+    <link href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism-tomorrow.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
   </head>
   <body>
-    <pre><code>
-      R(""" 
-      
+    <pre><code class="language-javascript">
 host.onInit(async function (ctx) {
   const root = document.getElementById("app");
   root.textContent = "Loading…";
@@ -205,8 +204,8 @@ function translate(entry, s) {
     const meaning = translate(state.verb, state);
 
     output.innerHTML =
-      "<strong>Form:</strong> " + form +
-      "<br><strong>Meaning:</strong> " + meaning;
+      "&lt;strong&gt;Form:&lt;/strong&gt; " + form +
+      "&lt;br&gt;&lt;strong>Meaning:&lt;/strong&gt; " + meaning;
 
     host.reportHeight();
   }
@@ -218,7 +217,6 @@ function translate(entry, s) {
 });
 
 host.ready();
-      """)
     </code></pre>
   </body>
 </html>
