@@ -1,0 +1,224 @@
+<html>
+  <head>
+    
+  </head>
+  <body>
+    <p>
+      R(""" 
+      
+host.onInit(async function (ctx) {
+  const root = document.getElementById("app");
+  root.textContent = "Loading…";
+
+  let entries = [];
+
+  try {
+    const data = await host.request("getDictionary");
+    entries = data.entries || [];
+  } catch (e) {
+    root.textContent = "Failed to load dictionary.";
+    return;
+  }
+
+  const verbs = entries.filter(e => e.lemma.endsWith("pe"));
+
+  root.innerHTML = "";
+
+  let state = {
+    tense: "present",
+    intensity: false,
+    indirect: false,
+    verb: verbs[0] || null
+  };
+
+  function getRoot(word) {
+    return word.slice(0, -2);
+  }
+
+  function getSuffix(tense) {
+    if (tense === "present") return "pe";
+    if (tense === "past") return "be";
+    if (tense === "future") return "te";
+  }
+
+  function conjugate(entry, s) {
+    if (!entry) return "—";
+
+    const root = getRoot(entry.lemma);
+    let result = root;
+
+    if (s.intensity) {
+      result += "ʃi";
+    }
+
+    result += getSuffix(s.tense);
+
+    if (s.indirect) {
+      result = "ta" + result;
+    }
+
+    return result;
+  }
+
+  // 🔥 YOUR CUSTOM TRANSLATIONS (EDIT HERE)
+  const TRANSLATIONS = {
+    aaupe: {
+      present_false_false: "eat",
+      past_false_false: "ate",
+      future_false_false: "will eat",
+
+      present_true_false: "devour",
+      past_true_false: "devoured",
+      past_true_false: "will devour",
+
+      past_false_true: " - ",
+      past_true_true: " - "
+    },
+    hutʂpe: {
+      present_false_false: "see",
+      past_false_false: "saw",
+
+      present_true_false: "examine",
+      past_true_false: "examined",
+
+      present_false_true: "look at",
+      past_false_true: "looked at",
+
+      present_true_true: "look into",
+      past_true_true: "looked into",
+    },
+
+  };
+
+  function getKey(s) {
+  return s.tense + "_" + s.intensity + "_" + s.indirect;
+}
+
+function translate(entry, s) {
+  if (!entry) return "—";
+
+  const verbKey = entry.lemma;
+  const comboKey = getKey(s);
+  const verbData = TRANSLATIONS[verbKey] || {};
+
+  // 1. exact match
+  if (verbData[comboKey]) {
+    return verbData[comboKey];
+  }
+
+  // 2. auto future from present
+  if (s.tense === "future") {
+    const presentKey = "present_" + s.intensity + "_" + s.indirect;
+
+    if (verbData[presentKey]) {
+      return "will " + verbData[presentKey];
+    }
+  }
+
+  // 3. fallback
+  return entry.gloss || "(no translation)";
+}
+
+  // UI
+  const title = document.createElement("h3");
+  title.textContent = "Verb Conjugator";
+  root.appendChild(title);
+
+  const select = document.createElement("select");
+
+  verbs.forEach(v => {
+    const opt = document.createElement("option");
+    opt.value = v.lemma;
+    opt.textContent = v.lemma + (v.gloss ? " — " + v.gloss : "");
+    select.appendChild(opt);
+  });
+
+  select.onchange = function () {
+    state.verb = verbs.find(v => v.lemma === select.value);
+    update();
+  };
+
+  root.appendChild(select);
+
+  const tenseRow = document.createElement("div");
+  tenseRow.innerHTML = "<br><strong>Tense:</strong><br>";
+
+  const tenses = ["present", "past", "future"];
+  const buttons = [];
+
+  tenses.forEach(t => {
+    const btn = document.createElement("button");
+    btn.textContent = t;
+    btn.style.marginRight = "6px";
+
+    btn.onclick = function () {
+      state.tense = t;
+      buttons.forEach(b => {
+        b.style.background = "";
+        b.style.color = "";
+      });
+      btn.style.background = "#4CAF50";
+      btn.style.color = "white";
+      update();
+    };
+
+    buttons.push(btn);
+    tenseRow.appendChild(btn);
+  });
+
+  root.appendChild(tenseRow);
+
+  const intensityLabel = document.createElement("label");
+  const intensityInput = document.createElement("input");
+
+  intensityInput.type = "checkbox";
+  intensityInput.onchange = function () {
+    state.intensity = intensityInput.checked;
+    update();
+  };
+
+  intensityLabel.appendChild(intensityInput);
+  intensityLabel.appendChild(document.createTextNode(" Intensity"));
+  root.appendChild(intensityLabel);
+
+  const indirectLabel = document.createElement("label");
+  const indirectInput = document.createElement("input");
+
+  indirectInput.type = "checkbox";
+  indirectInput.onchange = function () {
+    state.indirect = indirectInput.checked;
+    update();
+  };
+
+  indirectLabel.appendChild(indirectInput);
+  indirectLabel.appendChild(document.createTextNode(" Indirect"));
+
+  root.appendChild(document.createElement("br"));
+  root.appendChild(indirectLabel);
+
+  const output = document.createElement("div");
+  output.style.marginTop = "10px";
+  root.appendChild(output);
+
+  function update() {
+    const form = conjugate(state.verb, state);
+    const meaning = translate(state.verb, state);
+
+    output.innerHTML =
+      "<strong>Form:</strong> " + form +
+      "<br><strong>Meaning:</strong> " + meaning;
+
+    host.reportHeight();
+  }
+
+  buttons[0].style.background = "#4CAF50";
+  buttons[0].style.color = "white";
+
+  update();
+});
+
+host.ready();
+      """)
+    </p>
+  </body>
+</html>
