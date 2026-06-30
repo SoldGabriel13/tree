@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="utf-8" />
-  <title>Klattsch Keyboard (fixed)</title>
+  <title>Klattsch Keyboard</title>
 </head>
 
 <body>
@@ -10,30 +10,41 @@
   <p>Keys: A, E, H, T, S</p>
 
 <script type="module">
-import workletUrl from "https://esm.sh/klattsch/formant-worklet.js?url";
 
+// ------------------------------
+// AUDIO CONTEXT
+// ------------------------------
 const ctx = new AudioContext();
+
+// ------------------------------
+// LOAD WORKLET (FIXED)
+// ------------------------------
+const workletUrl =
+  "https://cdn.jsdelivr.net/npm/klattsch/formant-worklet.js";
 
 await ctx.audioWorklet.addModule(workletUrl);
 
+// ------------------------------
+// NODE
+// ------------------------------
 const node = new AudioWorkletNode(ctx, "formant-processor", {
   outputChannelCount: [1]
 });
 
 node.connect(ctx.destination);
 
-// -----------------------------
-// LOAD REAL BANK (THIS IS THE FIX)
-// -----------------------------
+// ------------------------------
+// LOAD BANK (KEEP YOUR APPROACH)
+// ------------------------------
 const bank = await fetch(
   "https://raw.githubusercontent.com/tgies/klattsch/main/src/banks/klatt1980-en.json"
 ).then(r => r.json());
 
 console.log("Bank loaded:", Object.keys(bank.phonemes));
 
-// -----------------------------
-// KEY MAP (your request)
-// -----------------------------
+// ------------------------------
+// KEY MAP
+// ------------------------------
 const keyMap = {
   A: "AA",
   E: "E",
@@ -42,10 +53,12 @@ const keyMap = {
   S: "S"
 };
 
+// ------------------------------
 async function unlock() {
   if (ctx.state !== "running") await ctx.resume();
 }
 
+// ------------------------------
 function play(phoneme) {
   const target = bank.phonemes?.[phoneme];
 
@@ -61,13 +74,14 @@ function play(phoneme) {
   });
 }
 
+// ------------------------------
 window.addEventListener("keydown", async (e) => {
   await unlock();
 
-  const key = e.key.toUpperCase();
-  const phoneme = keyMap[key];
+  const phoneme = keyMap[e.key.toUpperCase()];
+  if (!phoneme) return;
 
-  if (phoneme) play(phoneme);
+  play(phoneme);
 });
 
 </script>
