@@ -1,0 +1,60 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Klattsch Keyboard</title>
+</head>
+<body>
+  <h3>Klattsch Real-Time Phoneme Keyboard</h3>
+  <p>Keys: A, H, E, I, U, T</p>
+
+<script type="module">
+import { bundled } from "./banks.js";
+import workletUrl from "klattsch/formant-worklet.js?url";
+
+// ---- Setup Audio ----
+const ctx = new AudioContext();
+await ctx.audioWorklet.addModule(workletUrl);
+
+const node = new AudioWorkletNode(ctx, "formant-processor");
+node.connect(ctx.destination);
+
+// Use English bank
+const bank = bundled["klatt1980-en"].phonemes;
+
+// Resume audio on first interaction
+window.addEventListener("keydown", () => ctx.resume(), { once: true });
+
+// ---- Key → phoneme mapping ----
+// (simple MVP mapping, not chord system yet)
+const keyMap = {
+  "A": "AA",   // vowel A sound (open vowel)
+  "H": "AH",   // vowel-ish /ah/
+  "E": "EH",
+  "I": "IH",
+  "U": "UH",
+  "T": "T"     // stop consonant burst
+};
+
+function speak(phoneme) {
+  const target = bank[phoneme];
+  if (!target) return;
+
+  node.port.postMessage({
+    type: "frame",
+    target,
+    transitionMs: 20
+  });
+}
+
+// ---- Input handling ----
+window.addEventListener("keydown", (e) => {
+  const key = e.key.toUpperCase();
+  if (keyMap[key]) {
+    speak(keyMap[key]);
+  }
+});
+</script>
+
+</body>
+</html>
