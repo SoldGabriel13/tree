@@ -2,58 +2,93 @@
 <html>
 <head>
   <meta charset="utf-8" />
-  <title>Klattsch Keyboard</title>
+  <title>Klattsch Remote Keyboard</title>
 </head>
+
 <body>
-  <h3>Klattsch Real-Time Phoneme Keyboard</h3>
-  <p>Keys: A, H, E, I, U, T</p>
+  <h3>Klattsch Real-Time Formant Keyboard</h3>
+  <p>Keys: A (AA), E (E), H (HH), T (T), S (S)</p>
 
 <script type="module">
-import { bundled } from "./banks.js";
-import workletUrl from "klattsch/formant-worklet.js?url";
+// ------------------------------
+// IMPORT KLATTSCH (REMOTE)
+// ------------------------------
+import { bundled } from "https://esm.sh/klattsch@latest";
+import workletUrl from "https://esm.sh/klattsch@latest/formant-worklet.js?url";
 
-// ---- Setup Audio ----
+// ------------------------------
+// AUDIO SETUP
+// ------------------------------
 const ctx = new AudioContext();
+
 await ctx.audioWorklet.addModule(workletUrl);
 
-const node = new AudioWorkletNode(ctx, "formant-processor");
+const node = new AudioWorkletNode(ctx, "formant-processor", {
+  outputChannelCount: [1]
+});
+
 node.connect(ctx.destination);
 
-// Use English bank
+// ------------------------------
+// PHONEME BANK
+// ------------------------------
 const bank = bundled["klatt1980-en"].phonemes;
 
-// Resume audio on first interaction
-window.addEventListener("keydown", () => ctx.resume(), { once: true });
+console.log("Available phonemes:", Object.keys(bank));
 
-// ---- Key → phoneme mapping ----
-// (simple MVP mapping, not chord system yet)
+// ------------------------------
+// KEY → PHONEME MAP
+// ------------------------------
 const keyMap = {
-  "A": "AA",   // vowel A sound (open vowel)
-  "H": "AH",   // vowel-ish /ah/
-  "E": "EH",
-  "I": "IH",
-  "U": "UH",
-  "T": "T"     // stop consonant burst
+  A: "AA",
+  E: "E",
+  H: "HH",
+  T: "T",
+  S: "S"
 };
 
-function speak(phoneme) {
+// ------------------------------
+// AUDIO UNLOCK
+// ------------------------------
+async function unlockAudio() {
+  if (ctx.state !== "running") {
+    await ctx.resume();
+    console.log("AudioContext running");
+  }
+}
+
+// ------------------------------
+// PLAY FUNCTION (LOW-LEVEL CONTROL)
+// ------------------------------
+function play(phoneme) {
   const target = bank[phoneme];
-  if (!target) return;
+
+  if (!target) {
+    console.warn("Missing phoneme in bank:", phoneme);
+    return;
+  }
 
   node.port.postMessage({
     type: "frame",
     target,
-    transitionMs: 20
+    transitionMs: 30
   });
 }
 
-// ---- Input handling ----
-window.addEventListener("keydown", (e) => {
+// ------------------------------
+// INPUT HANDLER
+// ------------------------------
+window.addEventListener("keydown", async (e) => {
+  await unlockAudio();
+
   const key = e.key.toUpperCase();
-  if (keyMap[key]) {
-    speak(keyMap[key]);
-  }
+  const phoneme = keyMap[key];
+
+  if (!phoneme) return;
+
+  play(phoneme);
 });
+
 </script>
 
 </body>
