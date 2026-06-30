@@ -2,23 +2,16 @@
 <html>
 <head>
   <meta charset="utf-8" />
-  <title>Klattsch Remote Keyboard</title>
+  <title>Klattsch Keyboard (fixed)</title>
 </head>
 
 <body>
-  <h3>Klattsch Real-Time Formant Keyboard</h3>
-  <p>Keys: A (AA), E (E), H (HH), T (T), S (S)</p>
+  <h3>Klattsch Real-Time Keyboard</h3>
+  <p>Keys: A, E, H, T, S</p>
 
 <script type="module">
-// ------------------------------
-// IMPORT KLATTSCH (REMOTE)
-// ------------------------------
-import { bundled } from "https://esm.sh/klattsch@latest";
-import workletUrl from "https://esm.sh/klattsch@latest/formant-worklet.js?url";
+import workletUrl from "https://esm.sh/klattsch/formant-worklet.js?url";
 
-// ------------------------------
-// AUDIO SETUP
-// ------------------------------
 const ctx = new AudioContext();
 
 await ctx.audioWorklet.addModule(workletUrl);
@@ -29,16 +22,18 @@ const node = new AudioWorkletNode(ctx, "formant-processor", {
 
 node.connect(ctx.destination);
 
-// ------------------------------
-// PHONEME BANK
-// ------------------------------
-const bank = bundled["klatt1980-en"].phonemes;
+// -----------------------------
+// LOAD REAL BANK (THIS IS THE FIX)
+// -----------------------------
+const bank = await fetch(
+  "https://raw.githubusercontent.com/tgies/klattsch/main/src/banks/klatt1980-en.json"
+).then(r => r.json());
 
-console.log("Available phonemes:", Object.keys(bank));
+console.log("Bank loaded:", Object.keys(bank.phonemes));
 
-// ------------------------------
-// KEY → PHONEME MAP
-// ------------------------------
+// -----------------------------
+// KEY MAP (your request)
+// -----------------------------
 const keyMap = {
   A: "AA",
   E: "E",
@@ -47,24 +42,15 @@ const keyMap = {
   S: "S"
 };
 
-// ------------------------------
-// AUDIO UNLOCK
-// ------------------------------
-async function unlockAudio() {
-  if (ctx.state !== "running") {
-    await ctx.resume();
-    console.log("AudioContext running");
-  }
+async function unlock() {
+  if (ctx.state !== "running") await ctx.resume();
 }
 
-// ------------------------------
-// PLAY FUNCTION (LOW-LEVEL CONTROL)
-// ------------------------------
 function play(phoneme) {
-  const target = bank[phoneme];
+  const target = bank.phonemes?.[phoneme];
 
   if (!target) {
-    console.warn("Missing phoneme in bank:", phoneme);
+    console.warn("Missing phoneme:", phoneme);
     return;
   }
 
@@ -75,18 +61,13 @@ function play(phoneme) {
   });
 }
 
-// ------------------------------
-// INPUT HANDLER
-// ------------------------------
 window.addEventListener("keydown", async (e) => {
-  await unlockAudio();
+  await unlock();
 
   const key = e.key.toUpperCase();
   const phoneme = keyMap[key];
 
-  if (!phoneme) return;
-
-  play(phoneme);
+  if (phoneme) play(phoneme);
 });
 
 </script>
