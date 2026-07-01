@@ -6,18 +6,14 @@
 </head>
 
 <body>
-  <h3>Klattsch Real-Time Formant Keyboard</h3>
-  <p>Keys: A (AA), E (E), H (HH), T (T), S (S)</p>
+  <h3>Klattsch Keyboard (GitHub Pages)</h3>
 
 <script type="module">
 
-// -----------------------------
-// AUDIO SETUP
-// -----------------------------
 const ctx = new AudioContext();
 
-// IMPORTANT: must be local path in your repo
-await ctx.audioWorklet.addModule("https://soldgabriel13.github.io/tree/Synth/src/formant-worklet.js");
+// IMPORTANT: relative path ONLY
+await ctx.audioWorklet.addModule("./src/formant-worklet.js");
 
 const node = new AudioWorkletNode(ctx, "formant-processor", {
   outputChannelCount: [1]
@@ -25,18 +21,12 @@ const node = new AudioWorkletNode(ctx, "formant-processor", {
 
 node.connect(ctx.destination);
 
-// -----------------------------
-// LOAD BANK (LOCAL FILE, NOT CDN)
-// -----------------------------
-const bank = await fetch("https://soldgabriel13.github.io/tree/Synth/src/banks/klatt1980-en.json")
+// load bank (relative path)
+const bank = await fetch("./src/banks/klatt1980-en.json")
   .then(r => r.json());
 
-console.log("Loaded phonemes:", Object.keys(bank.phonemes));
-
-// -----------------------------
-// KEY MAP
-// -----------------------------
-const keyMap = {
+// key mapping
+const map = {
   A: "AA",
   E: "E",
   H: "HH",
@@ -44,23 +34,15 @@ const keyMap = {
   S: "S"
 };
 
-// -----------------------------
-// AUDIO UNLOCK
-// -----------------------------
-async function unlockAudio() {
-  if (ctx.state !== "running") {
-    await ctx.resume();
-  }
+async function unlock() {
+  if (ctx.state !== "running") await ctx.resume();
 }
 
-// -----------------------------
-// PLAY FUNCTION
-// -----------------------------
-function play(phoneme) {
-  const target = bank.phonemes?.[phoneme];
+function play(p) {
+  const target = bank.phonemes?.[p];
 
   if (!target) {
-    console.warn("Missing phoneme:", phoneme);
+    console.warn("Missing phoneme:", p);
     return;
   }
 
@@ -71,16 +53,11 @@ function play(phoneme) {
   });
 }
 
-// -----------------------------
-// INPUT
-// -----------------------------
 window.addEventListener("keydown", async (e) => {
-  await unlockAudio();
+  await unlock();
 
-  const phoneme = keyMap[e.key.toUpperCase()];
-  if (!phoneme) return;
-
-  play(phoneme);
+  const p = map[e.key.toUpperCase()];
+  if (p) play(p);
 });
 
 </script>
