@@ -6,45 +6,36 @@
 </head>
 
 <body>
-  <h3>Klattsch Real-Time Keyboard</h3>
-  <p>Keys: A, E, H, T, S</p>
+  <h3>Klattsch Real-Time Formant Keyboard</h3>
+  <p>Keys: A (AA), E (E), H (HH), T (T), S (S)</p>
 
 <script type="module">
 
-// ------------------------------
-// AUDIO CONTEXT
-// ------------------------------
+// -----------------------------
+// AUDIO SETUP
+// -----------------------------
 const ctx = new AudioContext();
 
-// ------------------------------
-// LOAD WORKLET (FIXED)
-// ------------------------------
-const workletUrl =
-  "https://cdn.jsdelivr.net/npm/klattsch/formant-worklet.js";
+// IMPORTANT: must be local path in your repo
+await ctx.audioWorklet.addModule("./src/formant-worklet.js");
 
-await ctx.audioWorklet.addModule(workletUrl);
-
-// ------------------------------
-// NODE
-// ------------------------------
 const node = new AudioWorkletNode(ctx, "formant-processor", {
   outputChannelCount: [1]
 });
 
 node.connect(ctx.destination);
 
-// ------------------------------
-// LOAD BANK (KEEP YOUR APPROACH)
-// ------------------------------
-const bank = await fetch(
-  "https://raw.githubusercontent.com/tgies/klattsch/main/src/banks/klatt1980-en.json"
-).then(r => r.json());
+// -----------------------------
+// LOAD BANK (LOCAL FILE, NOT CDN)
+// -----------------------------
+const bank = await fetch("./src/banks/klatt1980-en.json")
+  .then(r => r.json());
 
-console.log("Bank loaded:", Object.keys(bank.phonemes));
+console.log("Loaded phonemes:", Object.keys(bank.phonemes));
 
-// ------------------------------
+// -----------------------------
 // KEY MAP
-// ------------------------------
+// -----------------------------
 const keyMap = {
   A: "AA",
   E: "E",
@@ -53,12 +44,18 @@ const keyMap = {
   S: "S"
 };
 
-// ------------------------------
-async function unlock() {
-  if (ctx.state !== "running") await ctx.resume();
+// -----------------------------
+// AUDIO UNLOCK
+// -----------------------------
+async function unlockAudio() {
+  if (ctx.state !== "running") {
+    await ctx.resume();
+  }
 }
 
-// ------------------------------
+// -----------------------------
+// PLAY FUNCTION
+// -----------------------------
 function play(phoneme) {
   const target = bank.phonemes?.[phoneme];
 
@@ -70,13 +67,15 @@ function play(phoneme) {
   node.port.postMessage({
     type: "frame",
     target,
-    transitionMs: 30
+    transitionMs: 35
   });
 }
 
-// ------------------------------
+// -----------------------------
+// INPUT
+// -----------------------------
 window.addEventListener("keydown", async (e) => {
-  await unlock();
+  await unlockAudio();
 
   const phoneme = keyMap[e.key.toUpperCase()];
   if (!phoneme) return;
