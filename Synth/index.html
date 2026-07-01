@@ -17,7 +17,7 @@
 const ctx = new AudioContext();
 
 // IMPORTANT: must be local path in your repo
-await ctx.audioWorklet.addModule("./src/formant-worklet.js");
+await ctx.audioWorklet.addModule("https://github.com/SoldGabriel13/tree/edit/main/Synth/src/formant-worklet.js");
 
 const node = new AudioWorkletNode(ctx, "formant-processor", {
   outputChannelCount: [1]
@@ -28,7 +28,7 @@ node.connect(ctx.destination);
 // -----------------------------
 // LOAD BANK (LOCAL FILE, NOT CDN)
 // -----------------------------
-const bank = await fetch("./src/banks/klatt1980-en.json")
+const bank = await fetch("https://github.com/SoldGabriel13/tree/edit/main/Synth/src/banks/klatt1980-en.json")
   .then(r => r.json());
 
 console.log("Loaded phonemes:", Object.keys(bank.phonemes));
